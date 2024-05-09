@@ -29,22 +29,24 @@
 			send.hidden = false
 		}
 
+		const needScroll = output.scrollHeight - output.scrollTop <= output.clientHeight + 20
 		output.value += `Connected to ${conn.peer}\n`
+		if (needScroll) {
+			output.scrollTop = output.scrollHeight
+		}
+
 		connections[conn.peer] = conn
 
 		conn.on("data", (data) => {
-			output.value += `Received from ${conn.peer}: ${data}\n`
-		})
+			if (data === "ping") {
+				conn.send("pong")
+			} else {
+				const needScroll = output.scrollHeight - output.scrollTop <= output.clientHeight + 20
+				output.value += `Received from ${conn.peer}: ${data}\n`
 
-		conn.on("close", () => {
-			output.value += `${conn.peer} disconnected\n`
-			connections[conn.peer] = null
-			delete connections[conn.peer]
-
-			if (Object.keys(connections).length === 0) {
-				input.hidden = true
-				send.hidden = true
-				output.value = ""
+				if (needScroll) {
+					output.scrollTop = output.scrollHeight
+				}
 			}
 		})
 	})
@@ -61,7 +63,13 @@
 		for (const conn in connections) {
 			connections[conn].send(input.value)
 		}
+
+		const needScroll = output.scrollHeight - output.scrollTop <= output.clientHeight + 20
 		output.value += `Sent to Everyone: ${input.value}\n`
+		if (needScroll) {
+			output.scrollTop = output.scrollHeight
+		}
+
 		input.value = ""
 	}
 })()
